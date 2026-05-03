@@ -1,20 +1,14 @@
-// next.config.ts
 import type { NextConfig } from "next";
 
+
 const nextConfig: NextConfig = {
-  turbopack: {
+  output: "export",
 
+  images: {
+    unoptimized: true,
   },
 
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        'three': require.resolve('three')
-      };
-    }
-    return config;
-  },
+  trailingSlash: true,
 };
 
 export default nextConfig;

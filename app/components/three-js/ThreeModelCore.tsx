@@ -156,7 +156,8 @@ export default function ThreeModelCore({ isNight, setIsNight, onError }: ThreeMo
     const applyMaterials = (model: THREE.Object3D) => {
         materialGroups.forEach(group => {
             model.traverse((child) => {
-                if (child.isMesh && group.meshes.includes(child.name)) {
+                //@ts-ignore
+                if (child instanceof THREE.Mesh && group.meshes.includes(child.name)) {
                     const materialProps: any = {
                         color: group.color,
                         metalness: group.metalness,
@@ -175,6 +176,7 @@ export default function ThreeModelCore({ isNight, setIsNight, onError }: ThreeMo
                     }
 
                     const material = new THREE.MeshStandardMaterial(materialProps);
+                    //@ts-ignore
                     child.material = material;
 
                     if (group.name === 'body') {
@@ -233,21 +235,30 @@ export default function ThreeModelCore({ isNight, setIsNight, onError }: ThreeMo
         otherLightsRef.current = [];
 
         model.traverse((child) => {
+            //@ts-ignore
             if (child.isMesh && child.material instanceof THREE.MeshStandardMaterial) {
 
+                //@ts-ignore
                 const oldMaterial = child.material;
 
                 if (ringNames.includes(child.name)) {
+                    //@ts-ignore
                     child.material = oldMaterial.clone();
+                    //@ts-ignore
                     child.material.toneMapped = false;
+                    //@ts-ignore
                     child.material.emissiveIntensity = 1;
+                    //@ts-ignore
                     ringLightsRef.current.push(child.material);
 
                 } else if (otherNames.includes(child.name)) {
-
+                    //@ts-ignore
                     child.material = oldMaterial.clone();
+                    //@ts-ignore
                     child.material.toneMapped = false;
+                    //@ts-ignore
                     child.material.emissiveIntensity = isNight ? 50 : 1;
+                    //@ts-ignore
                     otherLightsRef.current.push(child.material);
                 }
             }
@@ -423,6 +434,7 @@ export default function ThreeModelCore({ isNight, setIsNight, onError }: ThreeMo
 
                 const vector = partObject.position.clone();
                 const camera = controlsRef.current.object;
+                //@ts-ignore
                 vector.project(camera);
 
                 const width = mountRef.current.clientWidth;

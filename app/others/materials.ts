@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { MaterialGroup } from "../components/ThreeModel";
+import { MaterialGroup } from '../components/three-js/ThreeModelCore';
+
 
 export const materialGroups: MaterialGroup[] = [
     {
