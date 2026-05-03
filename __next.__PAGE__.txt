@@ -1,0 +1,12 @@
+1:"$Sreact.fragment"
+2:I[19430,["/_next/static/chunks/02qran6ctmqld.js","/_next/static/chunks/0dbhjjzl8qfwv.js","/_next/static/chunks/071xx0995t22r.js"],"default"]
+3:I[92326,["/_next/static/chunks/02qran6ctmqld.js","/_next/static/chunks/0dbhjjzl8qfwv.js","/_next/static/chunks/071xx0995t22r.js"],"default"]
+4:I[62753,["/_next/static/chunks/02qran6ctmqld.js","/_next/static/chunks/0dbhjjzl8qfwv.js","/_next/static/chunks/071xx0995t22r.js"],"default"]
+5:I[1261,["/_next/static/chunks/02qran6ctmqld.js","/_next/static/chunks/0dbhjjzl8qfwv.js","/_next/static/chunks/071xx0995t22r.js"],"default"]
+6:I[63607,["/_next/static/chunks/02qran6ctmqld.js","/_next/static/chunks/0dbhjjzl8qfwv.js","/_next/static/chunks/071xx0995t22r.js"],"default"]
+7:I[25523,["/_next/static/chunks/02qran6ctmqld.js","/_next/static/chunks/0dbhjjzl8qfwv.js","/_next/static/chunks/071xx0995t22r.js"],"TwoStackedPhoto"]
+8:I[25523,["/_next/static/chunks/02qran6ctmqld.js","/_next/static/chunks/0dbhjjzl8qfwv.js","/_next/static/chunks/071xx0995t22r.js"],"OneBigPhoto"]
+9:I[97367,["/_next/static/chunks/02qran6ctmqld.js","/_next/static/chunks/0dbhjjzl8qfwv.js"],"OutletBoundary"]
+a:"$Sreact.suspense"
+0:{"rsc":["$","$1","c",{"children":[["$","div",null,{"className":"flex flex-col min-h-screen bg-zinc-50 font-sans dark:bg-white","children":["$","main",null,{"className":"flex w-full flex-col items-center bg-white text-black","children":[["$","$L2",null,{}],["$","$L3",null,{}],["$","$L4",null,{}],["$","$L5",null,{}],["$","$L6",null,{}],["$","$L7",null,{"title":"All Around Lights (ALL) system","description":"Every curve serves a purpose","imageLeft":"/features/aal/aal-1.png","imageRight":"/features/aal/aal-2.png"}],["$","$L8",null,{"image":"/porsche-static-model/5.png","imagePosition":"bottom"}]]}]}],[["$","script","script-0",{"src":"/_next/static/chunks/071xx0995t22r.js","async":true}]],["$","$L9",null,{"children":["$","$a",null,{"name":"Next.MetadataOutlet","children":"$@b"}]}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"A1udNnLModVyEc71f2VdN"}
+b:null
