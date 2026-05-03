@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { materialGroups } from '../others/materials';
+import { materialGroups } from '../../others/materials';
+import LoaderOverlay from './LoaderOverlay';
 
 interface PartConfig {
     name: string;
@@ -14,10 +15,12 @@ interface PartConfig {
     position: { x: number; y: number; z: number };
 }
 
-interface ThreeModelProps {
+interface ThreeModelCoreProps {
     isNight: boolean;
     setIsNight: (value: boolean) => void;
+    onError?: () => void;
 }
+
 export interface MaterialGroup {
     name?: string;
     color: number;
@@ -31,13 +34,15 @@ export interface MaterialGroup {
     meshes: string[];
 }
 
-export default function ThreeModel({ isNight, setIsNight }: ThreeModelProps) {
+export default function ThreeModelCore({ isNight, setIsNight, onError }: ThreeModelCoreProps) {
     const mountRef = useRef<HTMLDivElement>(null);
     const controlsRef = useRef<OrbitControls | null>(null);
     const modelRef = useRef<THREE.Object3D | null>(null);
+    const [isModelReady, isModelReadySet] = useState(false);
     const [openParts, setOpenParts] = useState<Set<string>>(new Set());
     const [partsPos, setPartsPos] = useState<Record<string, { x: number; y: number; visible: boolean }>>({});
     const [isInteracting, setIsInteracting] = useState(false);
+    const [isModelLoaded, setIsModelLoaded] = useState(false);
     const interactionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const ambientLightRef = useRef<THREE.AmbientLight | null>(null);
@@ -52,9 +57,11 @@ export default function ThreeModel({ isNight, setIsNight }: ThreeModelProps) {
     const otherLightsRef = useRef<THREE.MeshStandardMaterial[]>([]);
 
     const bodyMeshesRef = useRef<Map<string, THREE.MeshStandardMaterial>>(new Map());
-    const [currentColor, setCurrentColor] = useState('#FF4789');
+    const [currentColor, setCurrentColor] = useState('#222222');
 
     const animationRef = useRef<number | null>(null);
+
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const animateColorTransition = (fromColor: string, toColor: string, duration: number = 500) => {
         if (animationRef.current) {
@@ -85,14 +92,6 @@ export default function ThreeModel({ isNight, setIsNight }: ThreeModelProps) {
 
         animationRef.current = requestAnimationFrame(animate);
     };
-
-    useEffect(() => {
-        return () => {
-            if (animationRef.current) {
-                cancelAnimationFrame(animationRef.current);
-            }
-        };
-    }, []);
 
     const partsConfig: PartConfig[] = [
         {
@@ -291,207 +290,229 @@ export default function ThreeModel({ isNight, setIsNight }: ThreeModelProps) {
     useEffect(() => {
         if (!mountRef.current) return;
 
-        const scene = new THREE.Scene();
-        scene.background = null;
+        try {
+            const scene = new THREE.Scene();
+            scene.background = null;
 
-        const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-        camera.position.set(3, 2, 5);
-        camera.lookAt(0, 0.5, 0);
+            const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+            camera.position.set(3, 2, 5);
+            camera.lookAt(0, 0.5, 0);
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.toneMapping = THREE.ReinhardToneMapping;
-        renderer.toneMappingExposure = 2.5;
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.toneMapping = THREE.ReinhardToneMapping;
+            renderer.toneMappingExposure = 2.5;
 
-        const updateSize = () => {
-            if (!mountRef.current) return;
-            const width = mountRef.current.clientWidth;
-            const height = width;
+            const updateSize = () => {
+                if (!mountRef.current) return;
+                const width = mountRef.current.clientWidth;
+                const height = width;
 
-            renderer.setSize(width, height);
+                renderer.setSize(width, height);
 
-            camera.aspect = width / height;
-            camera.updateProjectionMatrix();
-        };
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+            };
 
-        updateSize();
-        mountRef.current.appendChild(renderer.domElement);
-
-        const controls = new OrbitControls(camera, renderer.domElement);
-        controlsRef.current = controls;
-
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
-        controls.rotateSpeed = 1.0;
-        controls.zoomSpeed = 0.8;
-        controls.panSpeed = 0.5;
-        controls.enableZoom = true;
-        controls.enablePan = true;
-
-        controls.minDistance = 5;
-        controls.maxDistance = 6;
-        controls.maxPolarAngle = Math.PI / 2;
-        controls.minPolarAngle = Math.PI / 6;
-        controls.target.set(0, 0.5, 0);
-        controls.update();
-
-        // Ambient light
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
-        ambientLightRef.current = ambientLight;
-        scene.add(ambientLight);
-
-        // Main light
-        const mainLight = new THREE.DirectionalLight(0xffffff, 2.5);
-        mainLight.position.set(3, 5, 2);
-        mainLightRef.current = mainLight;
-        scene.add(mainLight);
-
-        // Fill light
-        const fillLight = new THREE.DirectionalLight(0xffffff, 1.2);
-        fillLight.position.set(0, 2, 4);
-        fillLightRef.current = fillLight;
-        scene.add(fillLight);
-
-        // Back light
-        const backLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        backLight.position.set(0, 1.5, -4);
-        backLightRef.current = backLight;
-        scene.add(backLight);
-
-        // Left light
-        const leftLight = new THREE.PointLight(0xffffff, 0.7);
-        leftLight.position.set(-4, 2, 1);
-        leftLightRef.current = leftLight;
-        scene.add(leftLight);
-
-        // Right light
-        const rightLight = new THREE.PointLight(0xffffff, 0.7);
-        rightLight.position.set(4, 2, 1);
-        rightLightRef.current = rightLight;
-        scene.add(rightLight);
-
-        // Top light
-        const topLight = new THREE.PointLight(0xffffff, 0.6);
-        topLight.position.set(0, 4, 0);
-        topLightRef.current = topLight;
-        scene.add(topLight);
-
-        const shadowGeometry = new THREE.CircleGeometry(2.0, 32);
-        const shadowMaterial = new THREE.MeshStandardMaterial({
-            map: createShadowTexture(),
-            transparent: true,
-            opacity: 0.7,
-            side: THREE.DoubleSide
-        });
-        const shadowDisc = new THREE.Mesh(shadowGeometry, shadowMaterial);
-        shadowDisc.rotation.x = -Math.PI / 2;
-        shadowDisc.position.y = -0.14;
-        scene.add(shadowDisc);
-
-        const loader = new GLTFLoader();
-
-        loader.load('/3d-model/porsche.glb', (gltf) => {
-            const model = gltf.scene;
-            model.scale.set(1, 1, 1);
-            model.position.set(0, 0, 0);
-            scene.add(model);
-            modelRef.current = model;
-
-            fixModelIssues(model, scene);
-            applyMaterials(model);
-            collectEmissiveParts(model);
-
-            updateLighting();
-
-            updateAllHotspotPositions();
-        }, undefined, (error) => {
-            console.error('Error loading model:', error);
-        });
-
-        const updatePartHotspotPosition = (partConfig: PartConfig) => {
-            if (!modelRef.current || !mountRef.current || !controlsRef.current) return;
-
-            const partObject = modelRef.current.getObjectByName(partConfig.name);
-            if (!partObject) return;
-
-            const vector = partObject.position.clone();
-            const camera = controlsRef.current.object;
-            vector.project(camera);
-
-            const width = mountRef.current.clientWidth;
-            const height = mountRef.current.clientHeight;
-
-            const screenX = (vector.x * 0.5 + 0.5) * width;
-            const screenY = (-vector.y * 0.5 + 0.5) * height;
-
-            setPartsPos(prev => ({
-                ...prev,
-                [partConfig.name]: {
-                    x: screenX,
-                    y: screenY,
-                    visible: vector.z < 1
-                }
-            }));
-        };
-
-        const updateAllHotspotPositions = () => {
-            partsConfig.forEach(config => updatePartHotspotPosition(config));
-        };
-
-        const handleStartInteraction = () => {
-            setIsInteracting(true);
-            if (interactionTimeoutRef.current) {
-                clearTimeout(interactionTimeoutRef.current);
-            }
-        };
-
-        const handleEndInteraction = () => {
-            interactionTimeoutRef.current = setTimeout(() => {
-                setIsInteracting(false);
-                updateAllHotspotPositions();
-            }, 300);
-        };
-
-        if (controlsRef.current) {
-            controlsRef.current.addEventListener('start', handleStartInteraction);
-            controlsRef.current.addEventListener('end', handleEndInteraction);
-            controlsRef.current.addEventListener('change', updateAllHotspotPositions);
-        }
-
-        const animate = () => {
-            requestAnimationFrame(animate);
-            controls.update();
-            renderer.render(scene, camera);
-
-            if (!isInteracting && modelRef.current) {
-                updateAllHotspotPositions();
-            }
-        };
-
-        animate();
-
-        const handleResize = () => {
             updateSize();
-            updateAllHotspotPositions();
-        };
+            mountRef.current.appendChild(renderer.domElement);
 
-        window.addEventListener('resize', handleResize);
+            const controls = new OrbitControls(camera, renderer.domElement);
+            controlsRef.current = controls;
 
-        return () => {
-            window.removeEventListener('resize', handleResize);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.rotateSpeed = 1.0;
+            controls.zoomSpeed = 0.8;
+            controls.panSpeed = 0.5;
+            controls.enableZoom = true;
+            controls.enablePan = true;
+
+            controls.minDistance = 5;
+            controls.maxDistance = 6;
+            controls.maxPolarAngle = Math.PI / 2;
+            controls.minPolarAngle = Math.PI / 6;
+            controls.target.set(0, 0.5, 0);
+            controls.update();
+
+            // Ambient light
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+            ambientLightRef.current = ambientLight;
+            scene.add(ambientLight);
+
+            // Main light
+            const mainLight = new THREE.DirectionalLight(0xffffff, 2.5);
+            mainLight.position.set(3, 5, 2);
+            mainLightRef.current = mainLight;
+            scene.add(mainLight);
+
+            // Fill light
+            const fillLight = new THREE.DirectionalLight(0xffffff, 1.2);
+            fillLight.position.set(0, 2, 4);
+            fillLightRef.current = fillLight;
+            scene.add(fillLight);
+
+            // Back light
+            const backLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            backLight.position.set(0, 1.5, -4);
+            backLightRef.current = backLight;
+            scene.add(backLight);
+
+            // Left light
+            const leftLight = new THREE.PointLight(0xffffff, 0.7);
+            leftLight.position.set(-4, 2, 1);
+            leftLightRef.current = leftLight;
+            scene.add(leftLight);
+
+            // Right light
+            const rightLight = new THREE.PointLight(0xffffff, 0.7);
+            rightLight.position.set(4, 2, 1);
+            rightLightRef.current = rightLight;
+            scene.add(rightLight);
+
+            // Top light
+            const topLight = new THREE.PointLight(0xffffff, 0.6);
+            topLight.position.set(0, 4, 0);
+            topLightRef.current = topLight;
+            scene.add(topLight);
+
+            const shadowGeometry = new THREE.CircleGeometry(2.0, 32);
+            const shadowMaterial = new THREE.MeshStandardMaterial({
+                map: createShadowTexture(),
+                transparent: true,
+                opacity: 0.7,
+                side: THREE.DoubleSide
+            });
+            const shadowDisc = new THREE.Mesh(shadowGeometry, shadowMaterial);
+            shadowDisc.rotation.x = -Math.PI / 2;
+            shadowDisc.position.y = -0.14;
+            scene.add(shadowDisc);
+
+            const loader = new GLTFLoader();
+
+            isModelReadySet(false)
+
+            timeoutRef.current = setTimeout(() => {
+                loader.load('/3d-model/porsche.glb', (gltf) => {
+                    const model = gltf.scene;
+                    model.scale.set(1, 1, 1);
+                    model.position.set(0, 0, 0);
+                    scene.add(model);
+                    modelRef.current = model;
+
+                    fixModelIssues(model, scene);
+                    applyMaterials(model);
+                    collectEmissiveParts(model);
+
+                    updateLighting();
+                    updateAllHotspotPositions();
+                    setIsModelLoaded(true);
+                    isModelReadySet(true)
+                }, undefined, (error) => {
+                    console.error('Error loading model:', error);
+                    isModelReadySet(true)
+                    if (onError) onError();
+                });
+            }, 3000);
+
+
+            const updatePartHotspotPosition = (partConfig: PartConfig) => {
+                if (!modelRef.current || !mountRef.current || !controlsRef.current) return;
+
+                const partObject = modelRef.current.getObjectByName(partConfig.name);
+                if (!partObject) return;
+
+                const vector = partObject.position.clone();
+                const camera = controlsRef.current.object;
+                vector.project(camera);
+
+                const width = mountRef.current.clientWidth;
+                const height = mountRef.current.clientHeight;
+
+                const screenX = (vector.x * 0.5 + 0.5) * width;
+                const screenY = (-vector.y * 0.5 + 0.5) * height;
+
+                setPartsPos(prev => ({
+                    ...prev,
+                    [partConfig.name]: {
+                        x: screenX,
+                        y: screenY,
+                        visible: vector.z < 1
+                    }
+                }));
+            };
+
+            const updateAllHotspotPositions = () => {
+                partsConfig.forEach(config => updatePartHotspotPosition(config));
+            };
+
+            const handleStartInteraction = () => {
+                setIsInteracting(true);
+                if (interactionTimeoutRef.current) {
+                    clearTimeout(interactionTimeoutRef.current);
+                }
+            };
+
+            const handleEndInteraction = () => {
+                interactionTimeoutRef.current = setTimeout(() => {
+                    setIsInteracting(false);
+                    updateAllHotspotPositions();
+                }, 300);
+            };
+
             if (controlsRef.current) {
-                controlsRef.current.removeEventListener('start', handleStartInteraction);
-                controlsRef.current.removeEventListener('end', handleEndInteraction);
-                controlsRef.current.removeEventListener('change', updateAllHotspotPositions);
+                controlsRef.current.addEventListener('start', handleStartInteraction);
+                controlsRef.current.addEventListener('end', handleEndInteraction);
+                controlsRef.current.addEventListener('change', updateAllHotspotPositions);
             }
-            if (interactionTimeoutRef.current) {
-                clearTimeout(interactionTimeoutRef.current);
-            }
-            controls.dispose();
-            if (mountRef.current && renderer.domElement) {
-                mountRef.current.removeChild(renderer.domElement);
-            }
-            renderer.dispose();
-        };
+
+            const animate = () => {
+                requestAnimationFrame(animate);
+                controls.update();
+                renderer.render(scene, camera);
+
+                if (!isInteracting && modelRef.current) {
+                    updateAllHotspotPositions();
+                }
+            };
+
+            animate();
+
+            const handleResize = () => {
+                updateSize();
+                updateAllHotspotPositions();
+            };
+
+            window.addEventListener('resize', handleResize);
+
+            return () => {
+                window.removeEventListener('resize', handleResize);
+                if (controlsRef.current) {
+                    controlsRef.current.removeEventListener('start', handleStartInteraction);
+                    controlsRef.current.removeEventListener('end', handleEndInteraction);
+                    controlsRef.current.removeEventListener('change', updateAllHotspotPositions);
+                }
+                if (interactionTimeoutRef.current) {
+                    clearTimeout(interactionTimeoutRef.current);
+                }
+                controls.dispose();
+                if (mountRef.current && renderer.domElement) {
+                    mountRef.current.removeChild(renderer.domElement);
+                }
+
+                if (animationRef.current) {
+                    cancelAnimationFrame(animationRef.current);
+                }
+
+                if (timeoutRef.current) {
+                    clearTimeout(timeoutRef.current);
+                }
+
+                renderer.dispose();
+            };
+        } catch (error) {
+            console.error('Error initializing 3D scene:', error);
+            if (onError) onError();
+        }
     }, []);
 
     const animatePart = (partConfig: PartConfig, targetValue: number) => {
@@ -567,69 +588,83 @@ export default function ThreeModel({ isNight, setIsNight }: ThreeModelProps) {
         }
     };
 
+
     return (
         <div className="relative w-full flex justify-center items-center">
             <div className="relative w-full max-w-[1000px]">
                 <div ref={mountRef} className="w-full aspect-square relative" style={{ background: 'transparent' }} />
-
-                {/* Night Mode Toggle Button - prawy górny róg */}
-                <div className="absolute top-16 right-4 flex flex-col gap-2 z-10">
-                    <button
-                        onClick={toggleDayNight}
-                        className="w-10 h-10 bg-black/70 hover:bg-black text-white text-xl font-bold rounded-full backdrop-blur-sm transition-all cursor-pointer"
-                        type="button"
-                        title={isNight ? "Switch to Day Mode" : "Switch to Night Mode"}
-                    >
-                        {isNight ? '☀️' : '🌙'}
-                    </button>
-                </div>
-
-                {partsConfig.map((partConfig) => {
-                    const pos = partsPos[partConfig.name];
-                    if (!pos || !pos.visible || isInteracting) return null;
-
-                    return (
+                {!isModelReady ? <LoaderOverlay /> : <>
+                    <div className="absolute top-16 right-4 flex flex-col gap-2 z-10">
                         <button
-                            key={partConfig.name}
-                            onClick={() => togglePart(partConfig)}
-                            className="absolute w-6 h-6 bg-white/40 hover:bg-white/70 rounded-full backdrop-blur-sm transition-all cursor-pointer"
-                            style={{
-                                left: pos.x - 12,
-                                top: pos.y - 12,
-                            }}
-                        />
-                    );
-                })}
+                            onClick={toggleDayNight}
+                            className="w-10 h-10 bg-black/70 hover:bg-black text-white rounded-full backdrop-blur-sm transition-all cursor-pointer flex items-center justify-center"
+                            type="button"
+                        >
+                            {isNight ? (
+                                <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <circle cx="12" cy="12" r="4" strokeWidth="2" />
+                                    <path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19" strokeWidth="2" />
+                                </svg>
+                            ) : (
+                                <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path
+                                        d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z"
+                                        strokeWidth="2"
+                                        strokeLinejoin="round"
+                                    />
+                                </svg>
+                            )}
+                        </button>
+                    </div>
 
-                <div className="absolute bottom-16 right-4 flex flex-wrap justify-end gap-2 z-10 max-w-[120px]">
-                    {colors.map((color) => (
+                    {isModelLoaded && partsConfig.map((partConfig) => {
+                        const pos = partsPos[partConfig.name];
+                        if (!pos || !pos.visible || isInteracting) return null;
+
+                        return (
+                            <button
+                                key={partConfig.name}
+                                onClick={() => togglePart(partConfig)}
+                                className="absolute w-6 h-6 bg-white/40 hover:bg-white/70 rounded-full backdrop-blur-sm transition-all cursor-pointer"
+                                style={{
+                                    left: pos.x - 12,
+                                    top: pos.y - 12,
+                                }}
+                            />
+                        );
+                    })}
+
+                    <div className="absolute bottom-16 right-4 flex flex-wrap justify-end gap-2 z-10 max-w-[120px]">
+                        {colors.map((color) => (
+                            <button
+                                key={color.value}
+                                onClick={() => changeBodyColor(color.value, color.metalness, color.roughness)}
+                                className={`w-8 h-8 rounded-full border-2 shadow-lg transition-transform hover:scale-110 ${currentColor === color.value ? 'border-white scale-110' : 'border-gray-400'
+                                    }`}
+                                style={{ backgroundColor: color.value }}
+                                title={color.name}
+                            />
+                        ))}
+                    </div>
+
+                    <div className="absolute bottom-16 left-4 flex flex-col gap-2 z-10">
                         <button
-                            key={color.value}
-                            onClick={() => changeBodyColor(color.value, color.metalness, color.roughness)}
-                            className={`w-8 h-8 rounded-full border-2 shadow-lg transition-transform hover:scale-110 ${currentColor === color.value ? 'border-white scale-110' : 'border-gray-400'
-                                }`}
-                            style={{ backgroundColor: color.value }}
-                            title={color.name}
-                        />
-                    ))}
-                </div>
+                            onClick={handleZoomIn}
+                            className="w-10 h-10 bg-black/70 hover:bg-black text-white text-xl font-bold rounded-full backdrop-blur-sm transition-all cursor-pointer"
+                            type="button"
+                        >
+                            +
+                        </button>
+                        <button
+                            onClick={handleZoomOut}
+                            className="w-10 h-10 bg-black/70 hover:bg-black text-white text-xl font-bold rounded-full backdrop-blur-sm transition-all cursor-pointer"
+                            type="button"
+                        >
+                            -
+                        </button>
+                    </div>
+                </>}
 
-                <div className="absolute bottom-16 left-4 flex flex-col gap-2 z-10">
-                    <button
-                        onClick={handleZoomIn}
-                        className="w-10 h-10 bg-black/70 hover:bg-black text-white text-xl font-bold rounded-full backdrop-blur-sm transition-all cursor-pointer"
-                        type="button"
-                    >
-                        +
-                    </button>
-                    <button
-                        onClick={handleZoomOut}
-                        className="w-10 h-10 bg-black/70 hover:bg-black text-white text-xl font-bold rounded-full backdrop-blur-sm transition-all cursor-pointer"
-                        type="button"
-                    >
-                        -
-                    </button>
-                </div>
             </div>
         </div>
     );

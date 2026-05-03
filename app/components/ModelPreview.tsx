@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import ThreeModel from "./ThreeModel";
+import ThreeModelLazy from './three-js/ThreeModelLazy';
 
 export default function ModelPreview() {
     const [isNight, setIsNight] = useState(false);
@@ -13,13 +13,13 @@ export default function ModelPreview() {
             </h2>
 
             <div
-                className="w-full max-h-[1000px] aspect-square rounded-2xl overflow-hidden relative"
+                className="w-full max-h-[1000px] aspect-square rounded-2xl overflow-hidden relative transition-colors duration-250 ease-in-out"
                 style={{
-                    background: !isNight ? '#F3F4F6' : '#2a2a2a'
+                    background: !isNight ? '#F3F4F6' : '#818181'
                 }}
             >
                 <div className="w-full h-full flex items-center justify-center">
-                    <ThreeModel isNight={isNight} setIsNight={setIsNight} />
+                    <ThreeModelLazy isNight={isNight} setIsNight={setIsNight} />
                 </div>
 
                 <img

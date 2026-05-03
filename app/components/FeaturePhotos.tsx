@@ -14,7 +14,7 @@ interface TwoStackedPhotoProps {
 }
 
 interface OneBigPhotoProps {
-    title: string;
+    title?: string;
     description?: string;
     image: string;
     alt?: string;
@@ -43,7 +43,7 @@ export function TwoStackedPhoto({
                         <img
                             src={imageLeft}
                             alt={altLeft}
-                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                            className="w-full h-full object-contain hover:scale-105 transition-transform duration-500"
                         />
                     </div>
                 </div>
@@ -52,7 +52,7 @@ export function TwoStackedPhoto({
                         <img
                             src={imageRight}
                             alt={altRight}
-                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                            className="w-full h-full object-contain hover:scale-105 transition-transform duration-500"
                         />
                     </div>
                 </div>
@@ -81,10 +81,12 @@ export function OneBigPhoto({
                     </div>
                 )}
 
-                <div className={`text-center ${imagePosition === 'top' ? 'mt-8' : 'mb-8'}`}>
+                {title && <div className={`text-center ${imagePosition === 'top' ? 'mt-8' : 'mb-8'}`}>
                     <h3 className="text-3xl md:text-4xl font-bold text-black mb-4">{title}</h3>
                     {description && <p className="text-gray-600 max-w-2xl mx-auto">{description}</p>}
-                </div>
+                </div>}
+
+
 
                 {imagePosition === 'bottom' && (
                     <div className="aspect-[16/9] rounded-2xl overflow-hidden bg-gray-100">

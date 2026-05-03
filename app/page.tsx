@@ -22,12 +22,12 @@ export default function Home() {
           imageRight="/features/aal/aal-2.png"
         />
 
-        {/* <OneBigPhoto
-          title="Lightweight Construction"
-          description="Carbon fiber monocoque for maximum performance"
-          image="/features/carbon-fiber.jpg"
+        <OneBigPhoto
+          // title="Mastering the Turn"
+          // description="Where precision aerodynamics and raw power redefine every corner."
+          image="/porsche-static-model/5.png"
           imagePosition="bottom"
-        /> */}
+        />
       </main>
     </div>
   );

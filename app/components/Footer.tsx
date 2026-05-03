@@ -83,14 +83,14 @@ export default function Footer() {
                                 <svg className="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                 </svg>
-                                <span>info@porsche.com</span>
+                                <span>contact@domenusfedo-concept.dev</span>
                             </li>
                         </ul>
                     </div>
                 </div>
 
                 <div className="border-t border-gray-200 pt-8 mt-8 text-center text-gray-500 text-sm">
-                    <p>&copy; 2026 Porsche. All rights reserved.</p>
+                    <p>&copy; 2026 Personal Project. Not affiliated with Porsche AG.</p>
                 </div>
             </div>
         </footer>
