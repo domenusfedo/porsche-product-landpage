@@ -14,6 +14,10 @@ interface PartConfig {
     position: { x: number; y: number; z: number };
 }
 
+interface ThreeModelProps {
+    isNight: boolean;
+    setIsNight: (value: boolean) => void;
+}
 export interface MaterialGroup {
     name?: string;
     color: number;
@@ -27,7 +31,7 @@ export interface MaterialGroup {
     meshes: string[];
 }
 
-export default function ThreeModel() {
+export default function ThreeModel({ isNight, setIsNight }: ThreeModelProps) {
     const mountRef = useRef<HTMLDivElement>(null);
     const controlsRef = useRef<OrbitControls | null>(null);
     const modelRef = useRef<THREE.Object3D | null>(null);
@@ -35,6 +39,17 @@ export default function ThreeModel() {
     const [partsPos, setPartsPos] = useState<Record<string, { x: number; y: number; visible: boolean }>>({});
     const [isInteracting, setIsInteracting] = useState(false);
     const interactionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    const ambientLightRef = useRef<THREE.AmbientLight | null>(null);
+    const mainLightRef = useRef<THREE.DirectionalLight | null>(null);
+    const fillLightRef = useRef<THREE.DirectionalLight | null>(null);
+    const backLightRef = useRef<THREE.DirectionalLight | null>(null);
+    const leftLightRef = useRef<THREE.PointLight | null>(null);
+    const rightLightRef = useRef<THREE.PointLight | null>(null);
+    const topLightRef = useRef<THREE.PointLight | null>(null);
+
+    const ringLightsRef = useRef<THREE.MeshStandardMaterial[]>([]);
+    const otherLightsRef = useRef<THREE.MeshStandardMaterial[]>([]);
 
     const bodyMeshesRef = useRef<Map<string, THREE.MeshStandardMaterial>>(new Map());
     const [currentColor, setCurrentColor] = useState('#FF4789');
@@ -123,7 +138,6 @@ export default function ThreeModel() {
         { name: 'Verde Mantis', value: '#00FF66', metalness: 0.4, roughness: 0.35 },
     ];
 
-
     const createShadowTexture = () => {
         const canvas = document.createElement('canvas');
         canvas.width = 512;
@@ -164,7 +178,6 @@ export default function ThreeModel() {
                     const material = new THREE.MeshStandardMaterial(materialProps);
                     child.material = material;
 
-                    // Zapisz referencję jeśli to karoseria
                     if (group.name === 'body') {
                         bodyMeshesRef.current.set(child.name, material);
                     }
@@ -177,7 +190,6 @@ export default function ThreeModel() {
         animateColorTransition(currentColor, color, 400);
         setCurrentColor(color);
 
-        // Jeśli przekazano parametry metalness/roughness, zaktualizuj materiał
         if (metalness !== undefined && roughness !== undefined) {
             bodyMeshesRef.current.forEach((material) => {
                 material.metalness = metalness;
@@ -187,7 +199,6 @@ export default function ThreeModel() {
     };
 
     const fixModelIssues = (model: THREE.Object3D, scene: THREE.Scene) => {
-        // 1. Dziura w wydechu - zaślepka
         const exhaustPart = model.getObjectByName('Cube028_2');
         if (exhaustPart) {
             const exhaustPos = exhaustPart.position.clone();
@@ -208,26 +219,72 @@ export default function ThreeModel() {
 
             scene.add(plug);
         }
-
-        // Tu możesz dodawać kolejne "brzydkie" poprawki
-        // np.:
-        // - przykrywanie dziur
-        // - dorabianie brakujących elementów
-        // - korekta pozycji niektórych części
     };
 
+    const collectEmissiveParts = (model: THREE.Object3D) => {
+        const ringNames = ['front-led-ring001', 'back-light-ring001'];
+        const otherNames = ['main-lights001', 'main-light001', 'back-stop-light001'];
+
+        model.traverse((child) => {
+            if (child.isMesh && child.material instanceof THREE.MeshStandardMaterial) {
+                if (ringNames.includes(child.name)) {
+                    console.log('Ring found:', child.name);
+                    child.material.emissiveIntensity = 1; // Dla dnia
+                    ringLightsRef.current.push(child.material);
+                } else if (otherNames.includes(child.name)) {
+                    console.log('Other light found:', child.name);
+                    child.material.emissiveIntensity = 0;
+                    otherLightsRef.current.push(child.material);
+                }
+            }
+        });
+    };
+
+    const updateLighting = () => {
+        if (isNight) {
+            if (ambientLightRef.current) ambientLightRef.current.intensity = 0.15;
+            if (mainLightRef.current) mainLightRef.current.intensity = 0.3;
+            if (fillLightRef.current) fillLightRef.current.intensity = 0.2;
+            if (backLightRef.current) backLightRef.current.intensity = 0.4;
+            if (leftLightRef.current) leftLightRef.current.intensity = 0.15;
+            if (rightLightRef.current) rightLightRef.current.intensity = 0.15;
+            if (topLightRef.current) topLightRef.current.intensity = 0.1;
+
+            ringLightsRef.current.forEach(mat => mat.emissiveIntensity = 1);
+            otherLightsRef.current.forEach(mat => mat.emissiveIntensity = 1);
+        } else {
+            if (ambientLightRef.current) ambientLightRef.current.intensity = 0.9;
+            if (mainLightRef.current) mainLightRef.current.intensity = 2.5;
+            if (fillLightRef.current) fillLightRef.current.intensity = 1.2;
+            if (backLightRef.current) backLightRef.current.intensity = 0.8;
+            if (leftLightRef.current) leftLightRef.current.intensity = 0.7;
+            if (rightLightRef.current) rightLightRef.current.intensity = 0.7;
+            if (topLightRef.current) topLightRef.current.intensity = 0.6;
+
+            ringLightsRef.current.forEach(mat => mat.emissiveIntensity = 1);
+            otherLightsRef.current.forEach(mat => mat.emissiveIntensity = 1);
+        }
+    };
+
+    useEffect(() => {
+        updateLighting();
+    }, [isNight]);
+
+    const toggleDayNight = () => {
+        setIsNight(!isNight);
+    };
 
     useEffect(() => {
         if (!mountRef.current) return;
 
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xF3F4F6);
+        scene.background = null;
 
         const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
         camera.position.set(3, 2, 5);
         camera.lookAt(0, 0.5, 0);
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 
         const updateSize = () => {
             if (!mountRef.current) return;
@@ -256,39 +313,50 @@ export default function ThreeModel() {
 
         controls.minDistance = 5;
         controls.maxDistance = 6;
-
         controls.maxPolarAngle = Math.PI / 2;
         controls.minPolarAngle = Math.PI / 6;
-
         controls.target.set(0, 0.5, 0);
-
         controls.update();
 
+        // Ambient light
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+        ambientLightRef.current = ambientLight;
         scene.add(ambientLight);
 
+        // Main light
         const mainLight = new THREE.DirectionalLight(0xffffff, 2.5);
         mainLight.position.set(3, 5, 2);
+        mainLightRef.current = mainLight;
         scene.add(mainLight);
 
+        // Fill light
         const fillLight = new THREE.DirectionalLight(0xffffff, 1.2);
         fillLight.position.set(0, 2, 4);
+        fillLightRef.current = fillLight;
         scene.add(fillLight);
 
+        // Back light
         const backLight = new THREE.DirectionalLight(0xffffff, 0.8);
         backLight.position.set(0, 1.5, -4);
+        backLightRef.current = backLight;
         scene.add(backLight);
 
+        // Left light
         const leftLight = new THREE.PointLight(0xffffff, 0.7);
         leftLight.position.set(-4, 2, 1);
+        leftLightRef.current = leftLight;
         scene.add(leftLight);
 
+        // Right light
         const rightLight = new THREE.PointLight(0xffffff, 0.7);
         rightLight.position.set(4, 2, 1);
+        rightLightRef.current = rightLight;
         scene.add(rightLight);
 
+        // Top light
         const topLight = new THREE.PointLight(0xffffff, 0.6);
         topLight.position.set(0, 4, 0);
+        topLightRef.current = topLight;
         scene.add(topLight);
 
         const shadowGeometry = new THREE.CircleGeometry(2.0, 32);
@@ -314,6 +382,9 @@ export default function ThreeModel() {
 
             fixModelIssues(model, scene);
             applyMaterials(model);
+            collectEmissiveParts(model);
+
+            updateLighting();
 
             updateAllHotspotPositions();
         }, undefined, (error) => {
@@ -483,7 +554,19 @@ export default function ThreeModel() {
     return (
         <div className="relative w-full flex justify-center items-center">
             <div className="relative w-full max-w-[1000px]">
-                <div ref={mountRef} className="w-full aspect-square relative" />
+                <div ref={mountRef} className="w-full aspect-square relative" style={{ background: 'transparent' }} />
+
+                {/* Night Mode Toggle Button - prawy górny róg */}
+                <div className="absolute top-16 right-4 flex flex-col gap-2 z-10">
+                    <button
+                        onClick={toggleDayNight}
+                        className="w-10 h-10 bg-black/70 hover:bg-black text-white text-xl font-bold rounded-full backdrop-blur-sm transition-all cursor-pointer"
+                        type="button"
+                        title={isNight ? "Switch to Day Mode" : "Switch to Night Mode"}
+                    >
+                        {isNight ? '☀️' : '🌙'}
+                    </button>
+                </div>
 
                 {partsConfig.map((partConfig) => {
                     const pos = partsPos[partConfig.name];

@@ -200,20 +200,5 @@ export const materialGroups: MaterialGroup[] = [
         side: THREE.DoubleSide,
         meshes: ['front-grill001', 'back-splitter001']
     },
-    {
-        // prawdziwe lustra - chrom/folia
-        color: 0xeeeeff,
-        metalness: 0.98,
-        roughness: 0.08,
-        emissive: 0x444444,
-        emissiveIntensity: 0.1,
-        side: THREE.DoubleSide,
-        meshes: ['mirror-mirrorL001', 'mirror-mirrorR001']
-    }
-
-
-
-
-
 ];
 
