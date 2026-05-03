@@ -9,7 +9,8 @@ export default function PorscheModel() {
     const scrollStepRef = useRef(2);
     const [isReady, setIsReady] = useState(false);
     const [windowWidth, setWindowWidth] = useState(0);
-    const [isMobile, setIsMobile] = useState(false);
+    const touchStartRef = useRef<number>(0);
+    const lastTouchTimeRef = useRef<number>(0);
 
     const photosToShow = [0, 1, 2, 4, 6, 8, 11, 14, 16, 18, 19, 22, 24, 26, 28, 30, 33, 34, 36, 38, 40, 41, 44, 46, 48, 50, 52, 55, 56, 58, 60];
 
@@ -17,21 +18,6 @@ export default function PorscheModel() {
         const num = i.toString().padStart(4, '0');
         return `/porsche-static-model-2/model_${num}.png`;
     });
-
-    useEffect(() => {
-        const checkMobile = () => {
-            const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-            const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
-            setIsMobile(isMobileDevice);
-
-            if (isMobileDevice) {
-                setImageIndex(images.length - 1);
-                setHasCompleted(true);
-            }
-        };
-
-        checkMobile();
-    }, [images.length]);
 
     useEffect(() => {
         const handleResize = () => {
@@ -52,7 +38,7 @@ export default function PorscheModel() {
     }, []);
 
     useEffect(() => {
-        if (!isReady || isMobile) return;
+        if (!isReady) return;
 
         const handleWheel = (e: WheelEvent) => {
             const container = containerRef.current;
@@ -70,10 +56,44 @@ export default function PorscheModel() {
             }
         };
 
+        const handleTouchStart = (e: TouchEvent) => {
+            if (hasCompleted) return;
+            touchStartRef.current = e.touches[0].clientY;
+            lastTouchTimeRef.current = Date.now();
+        };
+
+        const handleTouchMove = (e: TouchEvent) => {
+            const container = containerRef.current;
+            if (!container) return;
+            if (hasCompleted) return;
+            if (imageIndex >= images.length - 1) return;
+
+            const rect = container.getBoundingClientRect();
+            const isInView = rect.top >= -100 && rect.top <= window.innerHeight;
+
+            if (!isInView) return;
+
+            const deltaY = touchStartRef.current - e.touches[0].clientY;
+
+            if (deltaY > 0) {
+                e.preventDefault();
+
+                const now = Date.now();
+                if (now - lastTouchTimeRef.current < 50) return;
+                lastTouchTimeRef.current = now;
+
+                const newIndex = Math.min(imageIndex + scrollStepRef.current, images.length - 1);
+                setImageIndex(newIndex);
+                touchStartRef.current = e.touches[0].clientY;
+            }
+        };
+
         if (!hasCompleted && isReady) {
             document.body.style.overflow = 'hidden';
             document.documentElement.style.overflow = 'hidden';
             window.addEventListener('wheel', handleWheel, { passive: false });
+            window.addEventListener('touchstart', handleTouchStart, { passive: false });
+            window.addEventListener('touchmove', handleTouchMove, { passive: false });
         } else {
             document.body.style.overflow = 'auto';
             document.documentElement.style.overflow = 'auto';
@@ -81,10 +101,12 @@ export default function PorscheModel() {
 
         return () => {
             window.removeEventListener('wheel', handleWheel);
+            window.removeEventListener('touchstart', handleTouchStart);
+            window.removeEventListener('touchmove', handleTouchMove);
             document.body.style.overflow = 'auto';
             document.documentElement.style.overflow = 'auto';
         };
-    }, [imageIndex, images.length, hasCompleted, isReady, isMobile]);
+    }, [imageIndex, images.length, hasCompleted, isReady]);
 
     useEffect(() => {
         if (imageIndex === images.length - 1) {
@@ -163,12 +185,21 @@ export default function PorscheModel() {
                 >
                     <img
                         src={images[imageIndex]}
-                        alt="Porsche model"
+                        alt="Porsche 911 model"
                         className="w-full h-full object-contain"
+                        draggable={false}
                     />
                 </div>
             </div>
             <div className="w-full h-[50px] bg-transparent"></div>
+
+            {!hasCompleted && (
+                <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1">
+                    <span className="text-white text-xs">
+                        {Math.round((imageIndex / (images.length - 1)) * 100)}%
+                    </span>
+                </div>
+            )}
         </div>
     );
 }
