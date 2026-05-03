@@ -6,11 +6,10 @@ export default function PorscheModel() {
     const [imageIndex, setImageIndex] = useState(0);
     const containerRef = useRef<HTMLDivElement>(null);
     const [hasCompleted, setHasCompleted] = useState(false);
-    const scrollStepRef = useRef(2);
     const [isReady, setIsReady] = useState(false);
     const [windowWidth, setWindowWidth] = useState(0);
     const touchStartRef = useRef<number>(0);
-    const lastTouchTimeRef = useRef<number>(0);
+    const isDraggingRef = useRef(false);
 
     const photosToShow = [0, 1, 2, 4, 6, 8, 11, 14, 16, 18, 19, 22, 24, 26, 28, 30, 33, 34, 36, 38, 40, 41, 44, 46, 48, 50, 52, 55, 56, 58, 60];
 
@@ -32,98 +31,86 @@ export default function PorscheModel() {
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            window.scrollTo({ top: 0, behavior: 'instant' });
             setIsReady(true);
         }
     }, []);
 
+    // Obsługa scrolla na desktopie
     useEffect(() => {
-        if (!isReady) return;
+        if (!isReady || hasCompleted) return;
 
         const handleWheel = (e: WheelEvent) => {
             const container = containerRef.current;
             if (!container) return;
 
             const rect = container.getBoundingClientRect();
-            const isInView = rect.top >= -100 && rect.top <= window.innerHeight;
+            const isInView = rect.top <= window.innerHeight && rect.bottom >= 0;
 
-            if (isInView && imageIndex < images.length - 1 && !hasCompleted) {
+            if (isInView && imageIndex < images.length - 1) {
                 if (e.deltaY > 0) {
                     e.preventDefault();
-                    const newIndex = Math.min(imageIndex + scrollStepRef.current, images.length - 1);
-                    setImageIndex(newIndex);
+                    setImageIndex(prev => Math.min(prev + 1, images.length - 1));
                 }
             }
         };
 
+        window.addEventListener('wheel', handleWheel, { passive: false });
+
+        return () => window.removeEventListener('wheel', handleWheel);
+    }, [isReady, hasCompleted, imageIndex, images.length]);
+
+    // Obsługa touch na mobilkach
+    useEffect(() => {
+        if (!isReady || hasCompleted) return;
+
+        const container = containerRef.current;
+        if (!container) return;
+
         const handleTouchStart = (e: TouchEvent) => {
-            if (hasCompleted) return;
-            touchStartRef.current = e.touches[0].clientY;
-            lastTouchTimeRef.current = Date.now();
-        };
-
-        const handleTouchMove = (e: TouchEvent) => {
-            const container = containerRef.current;
-            if (!container) return;
-            if (hasCompleted) return;
-            if (imageIndex >= images.length - 1) return;
-
             const rect = container.getBoundingClientRect();
-            const isInView = rect.top >= -100 && rect.top <= window.innerHeight;
+            const isInView = rect.top <= window.innerHeight && rect.bottom >= 0;
 
-            if (!isInView) return;
-
-            const deltaY = touchStartRef.current - e.touches[0].clientY;
-
-            if (deltaY > 0) {
+            if (isInView && imageIndex < images.length - 1) {
                 e.preventDefault();
-
-                const now = Date.now();
-                if (now - lastTouchTimeRef.current < 50) return;
-                lastTouchTimeRef.current = now;
-
-                const newIndex = Math.min(imageIndex + scrollStepRef.current, images.length - 1);
-                setImageIndex(newIndex);
                 touchStartRef.current = e.touches[0].clientY;
+                isDraggingRef.current = true;
             }
         };
 
-        if (!hasCompleted && isReady) {
-            document.body.style.overflow = 'hidden';
-            document.documentElement.style.overflow = 'hidden';
-            window.addEventListener('wheel', handleWheel, { passive: false });
-            window.addEventListener('touchstart', handleTouchStart, { passive: false });
-            window.addEventListener('touchmove', handleTouchMove, { passive: false });
-        } else {
-            document.body.style.overflow = 'auto';
-            document.documentElement.style.overflow = 'auto';
-        }
+        const handleTouchMove = (e: TouchEvent) => {
+            if (!isDraggingRef.current) return;
+            if (imageIndex >= images.length - 1) return;
+
+            const deltaY = touchStartRef.current - e.touches[0].clientY;
+
+            // Przesunięcie w górę (scroll w dół) - zmień obrazek
+            if (deltaY > 15) { // Próg 15px dla lepszego UX
+                e.preventDefault();
+                setImageIndex(prev => Math.min(prev + 1, images.length - 1));
+                isDraggingRef.current = false; // Zapobiega wielokrotnym zmianom przy jednym przeciągnięciu
+            }
+        };
+
+        const handleTouchEnd = () => {
+            isDraggingRef.current = false;
+        };
+
+        container.addEventListener('touchstart', handleTouchStart, { passive: false });
+        container.addEventListener('touchmove', handleTouchMove, { passive: false });
+        container.addEventListener('touchend', handleTouchEnd);
 
         return () => {
-            window.removeEventListener('wheel', handleWheel);
-            window.removeEventListener('touchstart', handleTouchStart);
-            window.removeEventListener('touchmove', handleTouchMove);
-            document.body.style.overflow = 'auto';
-            document.documentElement.style.overflow = 'auto';
+            container.removeEventListener('touchstart', handleTouchStart);
+            container.removeEventListener('touchmove', handleTouchMove);
+            container.removeEventListener('touchend', handleTouchEnd);
         };
-    }, [imageIndex, images.length, hasCompleted, isReady]);
+    }, [isReady, hasCompleted, imageIndex, images.length]);
 
     useEffect(() => {
         if (imageIndex === images.length - 1) {
             setHasCompleted(true);
-            document.body.style.overflow = 'auto';
-            document.documentElement.style.overflow = 'auto';
         }
     }, [imageIndex, images.length]);
-
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const timeout = setTimeout(() => {
-                window.scrollTo(0, 0);
-            }, 50);
-            return () => clearTimeout(timeout);
-        }
-    }, []);
 
     const getHeight = () => {
         if (windowWidth < 640) return '250px';

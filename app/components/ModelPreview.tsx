@@ -27,7 +27,7 @@ export default function ModelPreview() {
                 <img
                     src="/icons/360-icon.svg"
                     alt="360 rotation"
-                    className="absolute top-8 right-8 w-12 h-12 md:w-16 md:h-16 z-10 opacity-80 hover:opacity-100 transition-all cursor-pointer"
+                    className="absolute top-8 right-8 w-12 h-12 md:w-16 md:h-16 z-10 opacity-80 hover:opacity-100 transition-all"
                     style={{
                         filter: !isNight
                             ? 'brightness(0) saturate(100%) invert(60%) sepia(0%) saturate(0%) brightness(100%) contrast(100%)'

@@ -607,7 +607,57 @@ export default function ThreeModelCore({ isNight, setIsNight, onError }: ThreeMo
                 <div ref={mountRef} className="w-full h-full relative"
                     style={{ background: 'transparent' }} />
                 {!isModelReady ? <LoaderOverlay /> : <>
-                    <div className="absolute top-8 left-8 flex flex-col gap-2 z-10">
+                    {isModelLoaded && partsConfig.map((partConfig) => {
+                        const pos = partsPos[partConfig.name];
+                        if (!pos || !pos.visible || isInteracting) return null;
+
+                        return (
+                            <button
+                                key={partConfig.name}
+                                onClick={() => togglePart(partConfig)}
+                                className="absolute w-6 h-6 bg-white/40 hover:bg-white/70 rounded-full backdrop-blur-sm transition-all cursor-pointer"
+                                style={{
+                                    left: pos.x - 12,
+                                    top: pos.y - 12,
+                                }}
+                            />
+                        );
+                    })}
+
+                    <div className="absolute bottom-8 right-8 flex flex-col gap-2 z-10">
+                        {colors.map((color) => (
+                            <button
+                                key={color.value}
+                                onClick={() => changeBodyColor(color.value, color.metalness, color.roughness)}
+                                className={`w-8 h-8 rounded-full cursor-pointer border-2 shadow-lg transition-transform hover:scale-110 ${currentColor === color.value ? 'border-white scale-110' : 'border-gray-400'
+                                    }`}
+                                style={{ backgroundColor: color.value }}
+                                title={color.name}
+                            />
+                        ))}
+                    </div>
+
+                    <div className="absolute bottom-8 left-8 flex flex-row gap-2 z-10">
+                        <button
+                            onClick={handleZoomIn}
+                            className="w-10 h-10 bg-black/70 hover:bg-black rounded-full backdrop-blur-sm transition-all cursor-pointer flex items-center justify-center"
+                            type="button"
+                        >
+                            <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19" />
+                                <line x1="5" y1="12" x2="19" y2="12" />
+                            </svg>
+                        </button>
+
+                        <button
+                            onClick={handleZoomOut}
+                            className="w-10 h-10 bg-black/70 hover:bg-black rounded-full backdrop-blur-sm transition-all cursor-pointer flex items-center justify-center"
+                            type="button"
+                        >
+                            <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="5" y1="12" x2="19" y2="12" />
+                            </svg>
+                        </button>
                         <button
                             onClick={toggleDayNight}
                             className="w-10 h-10 bg-black/70 hover:bg-black text-white rounded-full backdrop-blur-sm transition-all cursor-pointer flex items-center justify-center"
@@ -627,53 +677,6 @@ export default function ThreeModelCore({ isNight, setIsNight, onError }: ThreeMo
                                     />
                                 </svg>
                             )}
-                        </button>
-                    </div>
-
-                    {isModelLoaded && partsConfig.map((partConfig) => {
-                        const pos = partsPos[partConfig.name];
-                        if (!pos || !pos.visible || isInteracting) return null;
-
-                        return (
-                            <button
-                                key={partConfig.name}
-                                onClick={() => togglePart(partConfig)}
-                                className="absolute w-6 h-6 bg-white/40 hover:bg-white/70 rounded-full backdrop-blur-sm transition-all cursor-pointer"
-                                style={{
-                                    left: pos.x - 12,
-                                    top: pos.y - 12,
-                                }}
-                            />
-                        );
-                    })}
-
-                    <div className="absolute bottom-8 right-8 flex flex-wrap justify-end gap-2 z-10 max-w-[120px]">
-                        {colors.map((color) => (
-                            <button
-                                key={color.value}
-                                onClick={() => changeBodyColor(color.value, color.metalness, color.roughness)}
-                                className={`w-8 h-8 rounded-full border-2 shadow-lg transition-transform hover:scale-110 ${currentColor === color.value ? 'border-white scale-110' : 'border-gray-400'
-                                    }`}
-                                style={{ backgroundColor: color.value }}
-                                title={color.name}
-                            />
-                        ))}
-                    </div>
-
-                    <div className="absolute bottom-8 left-8 flex flex-col gap-2 z-10">
-                        <button
-                            onClick={handleZoomIn}
-                            className="w-10 h-10 bg-black/70 hover:bg-black text-white text-xl font-bold rounded-full backdrop-blur-sm transition-all cursor-pointer"
-                            type="button"
-                        >
-                            +
-                        </button>
-                        <button
-                            onClick={handleZoomOut}
-                            className="w-10 h-10 bg-black/70 hover:bg-black text-white text-xl font-bold rounded-full backdrop-blur-sm transition-all cursor-pointer"
-                            type="button"
-                        >
-                            -
                         </button>
                     </div>
                 </>}

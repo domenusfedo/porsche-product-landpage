@@ -7,7 +7,6 @@ export default function Footer() {
 
                     <div className="space-y-4">
                         <div>
-                            {/* <h2 className="text-3xl font-bold tracking-wider">PORSCHE</h2> */}
                             <img
                                 src="/porsche-1-logo-black-and-white.png"
                                 alt="Porsche logo"
@@ -90,7 +89,7 @@ export default function Footer() {
                 </div>
 
                 <div className="border-t border-gray-200 pt-8 mt-8 text-center text-gray-500 text-sm">
-                    <p>&copy; 2026 Personal Project. Not affiliated with Porsche AG.</p>
+                    <p>&copy; 2026 Personal Project. Not affiliated with Porsche</p>
                 </div>
             </div>
         </footer>
