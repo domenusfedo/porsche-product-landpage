@@ -6,6 +6,7 @@ export default function PorscheModel() {
     const [imageIndex, setImageIndex] = useState(0);
     const containerRef = useRef<HTMLDivElement>(null);
     const [hasCompleted, setHasCompleted] = useState(false);
+    const scrollStepRef = useRef(2);
     const [isReady, setIsReady] = useState(false);
     const [windowWidth, setWindowWidth] = useState(0);
     const [isMobile, setIsMobile] = useState(false);
@@ -45,38 +46,62 @@ export default function PorscheModel() {
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
+            window.scrollTo({ top: 0, behavior: 'instant' });
             setIsReady(true);
         }
     }, []);
 
     useEffect(() => {
-        if (!isReady || hasCompleted || isMobile) return;
+        if (!isReady || isMobile) return;
 
         const handleWheel = (e: WheelEvent) => {
             const container = containerRef.current;
             if (!container) return;
 
             const rect = container.getBoundingClientRect();
-            const isInView = rect.top <= window.innerHeight && rect.bottom >= 0;
+            const isInView = rect.top >= -100 && rect.top <= window.innerHeight;
 
-            if (isInView && imageIndex < images.length - 1) {
+            if (isInView && imageIndex < images.length - 1 && !hasCompleted) {
                 if (e.deltaY > 0) {
                     e.preventDefault();
-                    setImageIndex(prev => Math.min(prev + 1, images.length - 1));
+                    const newIndex = Math.min(imageIndex + scrollStepRef.current, images.length - 1);
+                    setImageIndex(newIndex);
                 }
             }
         };
 
-        window.addEventListener('wheel', handleWheel, { passive: false });
+        if (!hasCompleted && isReady) {
+            document.body.style.overflow = 'hidden';
+            document.documentElement.style.overflow = 'hidden';
+            window.addEventListener('wheel', handleWheel, { passive: false });
+        } else {
+            document.body.style.overflow = 'auto';
+            document.documentElement.style.overflow = 'auto';
+        }
 
-        return () => window.removeEventListener('wheel', handleWheel);
-    }, [isReady, hasCompleted, imageIndex, images.length, isMobile]);
+        return () => {
+            window.removeEventListener('wheel', handleWheel);
+            document.body.style.overflow = 'auto';
+            document.documentElement.style.overflow = 'auto';
+        };
+    }, [imageIndex, images.length, hasCompleted, isReady, isMobile]);
 
     useEffect(() => {
         if (imageIndex === images.length - 1) {
             setHasCompleted(true);
+            document.body.style.overflow = 'auto';
+            document.documentElement.style.overflow = 'auto';
         }
     }, [imageIndex, images.length]);
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const timeout = setTimeout(() => {
+                window.scrollTo(0, 0);
+            }, 50);
+            return () => clearTimeout(timeout);
+        }
+    }, []);
 
     const getHeight = () => {
         if (windowWidth < 640) return '250px';
@@ -138,9 +163,8 @@ export default function PorscheModel() {
                 >
                     <img
                         src={images[imageIndex]}
-                        alt="Porsche 911 model"
+                        alt="Porsche model"
                         className="w-full h-full object-contain"
-                        draggable={false}
                     />
                 </div>
             </div>
