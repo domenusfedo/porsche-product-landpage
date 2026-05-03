@@ -603,10 +603,11 @@ export default function ThreeModelCore({ isNight, setIsNight, onError }: ThreeMo
 
     return (
         <div className="relative w-full flex justify-center items-center">
-            <div className="relative w-full max-w-[1000px]">
-                <div ref={mountRef} className="w-full aspect-square relative" style={{ background: 'transparent' }} />
+            <div className="relative w-full" style={{ aspectRatio: '1 / 1' }}>
+                <div ref={mountRef} className="w-full h-full relative"
+                    style={{ background: 'transparent' }} />
                 {!isModelReady ? <LoaderOverlay /> : <>
-                    <div className="absolute top-16 right-4 flex flex-col gap-2 z-10">
+                    <div className="absolute top-8 left-8 flex flex-col gap-2 z-10">
                         <button
                             onClick={toggleDayNight}
                             className="w-10 h-10 bg-black/70 hover:bg-black text-white rounded-full backdrop-blur-sm transition-all cursor-pointer flex items-center justify-center"
@@ -646,7 +647,7 @@ export default function ThreeModelCore({ isNight, setIsNight, onError }: ThreeMo
                         );
                     })}
 
-                    <div className="absolute bottom-16 right-4 flex flex-wrap justify-end gap-2 z-10 max-w-[120px]">
+                    <div className="absolute bottom-8 right-8 flex flex-wrap justify-end gap-2 z-10 max-w-[120px]">
                         {colors.map((color) => (
                             <button
                                 key={color.value}
@@ -659,7 +660,7 @@ export default function ThreeModelCore({ isNight, setIsNight, onError }: ThreeMo
                         ))}
                     </div>
 
-                    <div className="absolute bottom-16 left-4 flex flex-col gap-2 z-10">
+                    <div className="absolute bottom-8 left-8 flex flex-col gap-2 z-10">
                         <button
                             onClick={handleZoomIn}
                             className="w-10 h-10 bg-black/70 hover:bg-black text-white text-xl font-bold rounded-full backdrop-blur-sm transition-all cursor-pointer"

@@ -11,8 +11,8 @@ interface ThreeModelProps {
 
 const LoadingFallback = () => (
     <div className="relative w-full flex justify-center items-center">
-        <div className="relative w-full max-w-[1000px]">
-            <div className="w-full aspect-square relative bg-gradient-to-br from-gray-900/20 to-gray-800/20 rounded-2xl flex items-center justify-center">
+        <div className="relative w-full" style={{ aspectRatio: '1 / 1' }}>
+            <div className="w-full h-full relative bg-gradient-to-br from-gray-900/20 to-gray-800/20 rounded-2xl flex items-center justify-center">
                 <div className="text-center">
                     <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                     <p className="text-gray-600 dark:text-gray-300 text-sm">Loading 3D Model...</p>

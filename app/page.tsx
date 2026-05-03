@@ -23,8 +23,6 @@ export default function Home() {
         />
 
         <OneBigPhoto
-          // title="Mastering the Turn"
-          // description="Where precision aerodynamics and raw power redefine every corner."
           image="/porsche-static-model/5.png"
           imagePosition="bottom"
         />

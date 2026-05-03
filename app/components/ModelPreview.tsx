@@ -13,9 +13,11 @@ export default function ModelPreview() {
             </h2>
 
             <div
-                className="w-full max-h-[1000px] aspect-square rounded-2xl overflow-hidden relative transition-colors duration-250 ease-in-out"
+                className="w-full rounded-2xl overflow-hidden relative transition-colors duration-250 ease-in-out"
                 style={{
-                    background: !isNight ? '#F3F4F6' : '#818181'
+                    background: !isNight ? '#F3F4F6' : '#818181',
+                    maxWidth: '1000px',
+                    aspectRatio: '1 / 1'
                 }}
             >
                 <div className="w-full h-full flex items-center justify-center">
