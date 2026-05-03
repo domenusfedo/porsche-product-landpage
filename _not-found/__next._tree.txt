@@ -1,3 +1,3 @@
-:HL["/_next/static/chunks/1400.~.9sw2ct.css","style"]
+:HL["/porsche-product-landpage/_next/static/chunks/1400.~.9sw2ct.css","style"]
 :HL["/porsche-1-logo-black-and-white.png","image"]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"A1udNnLModVyEc71f2VdN"}
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"PSCeJfVjuXHsFZ9Acy37p"}

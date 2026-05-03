@@ -1,5 +1,5 @@
-:HL["/_next/static/chunks/1400.~.9sw2ct.css","style"]
-:HL["/_next/static/media/797e433ab948586e-s.p.0.q-h669a_dqa.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
-:HL["/_next/static/media/caa3a2e1cccd8315-s.p.16t1db8_9y2o~.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/porsche-product-landpage/_next/static/chunks/1400.~.9sw2ct.css","style"]
+:HL["/porsche-product-landpage/_next/static/media/797e433ab948586e-s.p.0.q-h669a_dqa.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/porsche-product-landpage/_next/static/media/caa3a2e1cccd8315-s.p.16t1db8_9y2o~.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
 :HL["/porsche-1-logo-black-and-white.png","image"]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}},"staleTime":300,"buildId":"A1udNnLModVyEc71f2VdN"}
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}},"staleTime":300,"buildId":"PSCeJfVjuXHsFZ9Acy37p"}
